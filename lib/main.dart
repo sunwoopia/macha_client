@@ -32,17 +32,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return const Scaffold(
       appBar: Header(),
       body: SingleChildScrollView(
-        // child: NaverMap(
-          // onMapCreated: (controller) {
-          // },
-          // markers: [
-          //   Marker(
-          //     markerId: 'markerId',
-          //     position: LatLng(37.5665, 126.9780),
-          //     infoWindow: '서울',
-          //   ),
-          // ],
-        // ),
+
       ),
       bottomNavigationBar: Footer(),
     );
