@@ -1,0 +1,15 @@
+<svg width="129" height="60" viewBox="0 0 129 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="7" height="55" fill="black"/>
+<rect x="34" width="7" height="24" fill="black"/>
+<rect width="40" height="6" fill="black"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M0.254883 49H24.2549L21.6015 55.0708L0.254883 55V49Z" fill="black"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M14.7027 50.2182L33.9999 18.3022L40.6791 21.6333L21.1076 54.2056L14.7027 50.2182Z" fill="black"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M64.8511 55.0703L40.4924 17.5356L34.4844 21.7118L55.5828 55.0703L64.8511 55.0703Z" fill="black"/>
+<rect x="65" y="17" width="7" height="38" fill="black"/>
+<rect x="65" y="17" width="22" height="6" fill="black"/>
+<rect x="116" y="17" width="7" height="38" fill="black"/>
+<rect x="119" y="33" width="10" height="5" fill="black"/>
+<rect x="88" y="25" width="24" height="6.31579" fill="black"/>
+<rect x="86" y="39.1426" width="20" height="6" transform="rotate(-45 86 39.1426)" fill="black"/>
+<rect x="109.142" y="43.3848" width="20" height="6" transform="rotate(-135 109.142 43.3848)" fill="black"/>
+</svg>
