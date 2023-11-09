@@ -7,19 +7,23 @@ class Footer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BottomNavigationBar(
+      currentIndex: 0,
       type: BottomNavigationBarType.fixed,
       backgroundColor: Colors.white,
       elevation: 0,
       items: <BottomNavigationBarItem>[
         BottomNavigationBarItem(
+          activeIcon: _buildFooterButton('assets/images/active_home.svg'),
           icon: _buildFooterButton('assets/images/home.svg'),
           label: '',
         ),
         BottomNavigationBarItem(
+          activeIcon: _buildFooterButton('assets/images/active_location.svg'),
           icon: _buildFooterButton('assets/images/location.svg'),
           label: '',
         ),
         BottomNavigationBarItem(
+          activeIcon: _buildFooterButton('assets/images/active_setting.svg'),
           icon: _buildFooterButton('assets/images/setting.svg'),
           label: '',
         ),
@@ -31,8 +35,8 @@ class Footer extends StatelessWidget {
     return IconButton(
       icon: SvgPicture.asset(
         imagePath,
-        width: 24,
-        height: 24,
+        width: 46,
+        height: 46,
       ),
       onPressed: () {
         // 각 버튼이 눌렸을 때의 동작 추가
