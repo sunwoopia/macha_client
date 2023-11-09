@@ -64,6 +64,7 @@ flutter:
     - assets/images/location.svg
     - assets/images/chat.svg
     - assets/images/setting.svg
+    - assets/images/location.png
     - assets/images/active_home.svg
     - assets/images/active_location.svg
     - assets/images/active_setting.svg
