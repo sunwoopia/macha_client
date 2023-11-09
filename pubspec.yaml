@@ -64,6 +64,8 @@ flutter:
     - assets/images/location.svg
     - assets/images/chat.svg
     - assets/images/setting.svg
+    - assets/images/location.png
+
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
