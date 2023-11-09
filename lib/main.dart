@@ -186,7 +186,7 @@ class _MyHomePageState3 extends State<MyHomePage3> {
                 style: ElevatedButton.styleFrom(
                 primary: Color(0xFFB2B2B2),
                 onPrimary: Colors.white,
-                fixedSize: Size(96, 48),
+                fixedSize: Size(96, 49),
                 shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(50),
                   ),
