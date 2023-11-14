@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import './common/components/header.dart';
 import './common/components/footer.dart';
+import '../pages/appSettings.dart';
 
 void main() {
   runApp(const MyApp());
@@ -32,7 +33,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: Header(),
-      body: ProfilePage(),
+      body: appSettings(),
       bottomNavigationBar: Footer(),
     );
   }
