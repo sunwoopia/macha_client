@@ -32,12 +32,12 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MyHomePage extends StatefulWidget {
+class MainPage1 extends StatefulWidget {
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<MainPage1> createState() => _MainPage1State();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MainPage1State extends State<MainPage1> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -66,88 +66,45 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ),
       ),
-      floatingActionButton: ElevatedButton(
-        onPressed: () {},
-        style: ElevatedButton.styleFrom(
-          primary: Color(0xFF141D5B),
-          onPrimary: Colors.white,
-          fixedSize: Size(148, 48),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(50),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Container(
+            margin: const EdgeInsets.only(bottom: 34),
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => MainPage2()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                primary: Color(0xFF141D5B),
+                onPrimary: Colors.white,
+                fixedSize: Size(148, 48),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(50),
+                ),
+              ),
+              child: Text('+    장소추가하기'),
+            ),
           ),
-        ),
-        child: Text('+    장소추가하기'),
+        ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      // body: ProfilePage(),
       bottomNavigationBar: Footer(),
     );
   }
 }
 
-// class MyHomePage2 extends StatefulWidget {
-//   @override
-//   State<MyHomePage2> createState() => _MyHomePageState2();
-// }
-// class _MyHomePageState2 extends State<MyHomePage2> {
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: Header(),
-//       body: Center(
-//         child:Container(
-//           child:Column(
-//               children[
-//                 Text(
-//                   '우리집',
-//                   style: TextStyle(fontSize: 20, color: Colors.black),
-//                   // decoration: BoxDecoration(
-//                   //   border: Border.all(
-//                   //     color: Colors.black,
-//                   //     width: 1.0,
-//                   //   ),
-//                   // ),
-//                 ),
-//                 Text(
-//                 '서울 성북구 삼양로27길 19',
-//                 style: TextStyle(fontSize: 20, color: Colors.black),
-//                 // decoration: BoxDecoration(
-//                 //   border: Border.all(
-//                 //     color: Colors.black,
-//                 //     width: 1.0,
-//                 //     ),
-//                 //   ),
-//                 ),
-//               ],
-//           )
-//         ),
-//       ),
-//       floatingActionButton: ElevatedButton(
-//         onPressed: () {},
-//         style: ElevatedButton.styleFrom(
-//           primary: Color(0xFF141D5B),
-//           onPrimary: Colors.white,
-//           fixedSize: Size(148, 48),
-//           shape: RoundedRectangleBorder(
-//             borderRadius: BorderRadius.circular(50),
-//           ),
-//         ),
-//         child: Text('+    장소추가하기'),
-//       ),
-//       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-//       bottomNavigationBar: Footer(),
-//     );
-//   }
-// }
 
-
-
-
-class MyHomePage3 extends StatefulWidget {
+class MainPage2 extends StatefulWidget {
   @override
-  State<MyHomePage3> createState() => _MyHomePageState3();
+  State<MainPage2> createState() => _MainPage2State();
 }
-class _MyHomePageState3 extends State<MyHomePage3> {
+class _MainPage2State extends State<MainPage2> {
+  bool isChecked = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -158,29 +115,35 @@ class _MyHomePageState3 extends State<MyHomePage3> {
           child: Column(
             children: [
               Container(
-                  width:295,
-                  height:102,
+                width: 295,
+                height: 102,
                 decoration: BoxDecoration(
-                  border:Border.all(
-                  color:Colors.black,
-                  width:1.0,
+                  color: isChecked ? Color(0xFFBB86FC).withOpacity(0.1) : Colors.transparent, // Updated line
+                  border: Border.all(
+                    color: isChecked ? Color(0xFF601CB7) : Colors.black.withOpacity(0.12),
+                    width: 1.0,
                   ),
+                  borderRadius: BorderRadius.circular(5),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      children:[
+                      children: [
                         Text(
-                        '우리집',
-                        style: TextStyle(fontSize: 16, color: Colors.black),
+                          '우리집',
+                          style: TextStyle(fontSize: 16, color: Colors.black),
                         ),
-                        Spacer(), // Add a spacer to push the checkbox to the right
+                        Spacer(),
                         Checkbox(
-                          value: true,
-                          onChanged: (value) {},
+                          value: isChecked,
+                          onChanged: (value) {
+                            setState(() {
+                              isChecked = value!;
+                            });
+                          },
                           shape: CircleBorder(),
-                          activeColor: Color(0xFF601CB7),
+                          activeColor: isChecked ? Color(0xFF601CB7) : Colors.transparent,
                         ),
                       ],
                     ),
@@ -191,22 +154,58 @@ class _MyHomePageState3 extends State<MyHomePage3> {
                   ],
                 ),
               ),
-              SizedBox(height: 20), // Add margin between container and button
-                ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                primary: Color(0xFFB2B2B2),
-                onPrimary: Colors.white,
-                fixedSize: Size(96, 49),
-                shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(50),
+              SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                      primary: isChecked ? Color(0xFF601CB7) : Color(0xFFB2B2B2),
+                      onPrimary: Colors.white,
+                      fixedSize: Size(96, 48),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(50),
+                      ),
+                    ),
+                    child: Text('막차보기'),
                   ),
-                ),
-                child: Text('막차보기'),
+                ],
               ),
             ],
           ),
         ),
+      ),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Container(
+            margin: const EdgeInsets.only(bottom: 34),
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => MainPage1()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                primary: Color(0xFF141D5B),
+                onPrimary: Colors.white,
+                fixedSize: Size(148, 48),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(50),
+                ),
+              ),
+              child: Text('+    장소추가하기'),
+            ),
+          ),
+        ],
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      bottomNavigationBar: Footer(),
+    );
+  }
+}
 
 class NaverMapPage extends StatefulWidget {
   @override
@@ -408,7 +407,7 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
     Timer(Duration(seconds: 1), () {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => MyHomePage3()),
+        MaterialPageRoute(builder: (context) => MainPage1()),
 
     // Timer(Duration(seconds: 2), () {
      // Navigator.of(context).pushReplacement(
