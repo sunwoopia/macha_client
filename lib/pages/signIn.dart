@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:async';
 import './signUp.dart';
 
 class SignIn extends StatelessWidget {

@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
       highlightColor: Colors.transparent,
       ),
-      home: NaverMapPage(),
+      home: ProfilePage(),
       debugShowCheckedModeBanner: false,
     );
   }
@@ -207,7 +207,10 @@ class _MyHomePageState3 extends State<MyHomePage3> {
             ],
           ),
         ),
-
+      ),
+    );
+  }
+}
 class NaverMapPage extends StatefulWidget {
   @override
   _NaverMapPageState createState() => _NaverMapPageState();
@@ -378,6 +381,7 @@ class ProfilePage extends StatelessWidget {
     );
   }
 }
+    
 
 class personalInforamtion extends StatelessWidget {
   @override
@@ -408,11 +412,7 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
     Timer(Duration(seconds: 1), () {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => MyHomePage3()),
-
-    // Timer(Duration(seconds: 2), () {
-     // Navigator.of(context).pushReplacement(
-      //  MaterialPageRoute(builder: (context) => SignIn()),
+        MaterialPageRoute(builder: (context) => SignIn()),
       );
     });
   }
