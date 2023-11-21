@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
+import 'package:macha_client/pages/profile.dart';
+import 'package:provider/provider.dart';
 import './common/components/header.dart';
 import './common/components/footer.dart';
-import './pages/signIn.dart';
-import './pages/signUp.dart';
-
+import 'pages/sign_up.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:permission_handler/permission_handler.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await NaverMapSdk.instance.initialize(
@@ -14,8 +17,12 @@ void main() async {
         debugPrint('Auth failed: $error');
       });
 
-
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => LocationProvider(), // LocationProvider 인스턴스 생성
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -26,8 +33,93 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
       highlightColor: Colors.transparent,
       ),
-      home: ProfilePage(),
+      home: SplashScreen(),
       debugShowCheckedModeBanner: false,
+    );
+  }
+}
+
+// 스플래시 스크린
+class SplashScreen extends StatefulWidget {
+  @override
+  _SplashScreenState createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginStatus();
+  }
+
+  _checkLoginStatus() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
+
+    if (token != null) {
+      // 토큰이 저장되어 있으면 로그인 상태이므로 MyHome 으로 이동
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => MainPage()),
+      );
+    } else {
+      // 토큰이 없으면 로그인되지 않은 상태이므로 SignUp 으로 이동
+      Timer(Duration(seconds: 1), () {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => SignUp()),
+        );
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Center(
+        child: Image.asset(
+          'assets/images/splash.png',
+          width: 200,
+          height: 200,
+        ),
+      ),
+    );
+  }
+}
+class MainPage extends StatefulWidget {
+  @override
+  State<MainPage> createState() => _MainPageState();
+}
+class _MainPageState extends State<MainPage> {
+  final PageController _pageController = PageController();
+  int _currentIndex = 0;
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: const Header(),
+      body: PageView(
+        physics: NeverScrollableScrollPhysics(),
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        children: [
+          MyHomePage(),
+          NaverMapPage(),
+          ProfilePage(),
+        ],
+      ),
+      bottomNavigationBar: Footer(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          _pageController.animateToPage(
+            index,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
+        },
+      ),
     );
   }
 }
@@ -41,7 +133,6 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: Header(),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(40.0),
@@ -49,7 +140,7 @@ class _MyHomePageState extends State<MyHomePage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                child: Text(
+                child: const Text(
                   '장소를 추가해주세요',
                   style: TextStyle(fontSize: 16, color: Colors.black),
                   textAlign: TextAlign.center,
@@ -69,9 +160,8 @@ class _MyHomePageState extends State<MyHomePage> {
       floatingActionButton: ElevatedButton(
         onPressed: () {},
         style: ElevatedButton.styleFrom(
-          primary: Color(0xFF141D5B),
-          onPrimary: Colors.white,
-          fixedSize: Size(148, 48),
+          backgroundColor: Color(0xFF141D5B),
+          fixedSize: const Size(148, 48),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(50),
           ),
@@ -79,154 +169,65 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Text('+    장소추가하기'),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      // body: ProfilePage(),
-      bottomNavigationBar: Footer(),
     );
   }
 }
-
-// class MyHomePage2 extends StatefulWidget {
-//   @override
-//   State<MyHomePage2> createState() => _MyHomePageState2();
-// }
-// class _MyHomePageState2 extends State<MyHomePage2> {
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: Header(),
-//       body: Center(
-//         child:Container(
-//           child:Column(
-//               children[
-//                 Text(
-//                   '우리집',
-//                   style: TextStyle(fontSize: 20, color: Colors.black),
-//                   // decoration: BoxDecoration(
-//                   //   border: Border.all(
-//                   //     color: Colors.black,
-//                   //     width: 1.0,
-//                   //   ),
-//                   // ),
-//                 ),
-//                 Text(
-//                 '서울 성북구 삼양로27길 19',
-//                 style: TextStyle(fontSize: 20, color: Colors.black),
-//                 // decoration: BoxDecoration(
-//                 //   border: Border.all(
-//                 //     color: Colors.black,
-//                 //     width: 1.0,
-//                 //     ),
-//                 //   ),
-//                 ),
-//               ],
-//           )
-//         ),
-//       ),
-//       floatingActionButton: ElevatedButton(
-//         onPressed: () {},
-//         style: ElevatedButton.styleFrom(
-//           primary: Color(0xFF141D5B),
-//           onPrimary: Colors.white,
-//           fixedSize: Size(148, 48),
-//           shape: RoundedRectangleBorder(
-//             borderRadius: BorderRadius.circular(50),
-//           ),
-//         ),
-//         child: Text('+    장소추가하기'),
-//       ),
-//       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-//       bottomNavigationBar: Footer(),
-//     );
-//   }
-// }
-
-
-
-
-class MyHomePage3 extends StatefulWidget {
-  @override
-  State<MyHomePage3> createState() => _MyHomePageState3();
-}
-class _MyHomePageState3 extends State<MyHomePage3> {
+class SearchBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: Header(),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(40.0),
-          child: Column(
-            children: [
-              Container(
-                  width:295,
-                  height:102,
-                decoration: BoxDecoration(
-                  border:Border.all(
-                  color:Colors.black,
-                  width:1.0,
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children:[
-                        Text(
-                        '우리집',
-                        style: TextStyle(fontSize: 16, color: Colors.black),
-                        ),
-                        Spacer(), // Add a spacer to push the checkbox to the right
-                        Checkbox(
-                          value: true,
-                          onChanged: (value) {},
-                          shape: CircleBorder(),
-                          activeColor: Color(0xFF601CB7),
-                        ),
-                      ],
-                    ),
-                    Text(
-                      '서울 성북구 삼양로27길 19',
-                      style: TextStyle(fontSize: 16, color: Colors.black),
-                    ),
-                  ],
-                ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      margin: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: const Color.fromRGBO(178, 178, 178, 0.2),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.search, color: Colors.black,),
+          SizedBox(width: 4),
+          Expanded(
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: '장소를 검색하세요',
+                border: InputBorder.none,
               ),
-              SizedBox(height: 20), // Add margin between container and button
-                ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                primary: Color(0xFFB2B2B2),
-                onPrimary: Colors.white,
-                fixedSize: Size(96, 49),
-                shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(50),
-                  ),
-                ),
-                child: Text('막차보기'),
-              ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 }
+
 class NaverMapPage extends StatefulWidget {
   @override
   _NaverMapPageState createState() => _NaverMapPageState();
 }
 class _NaverMapPageState extends State<NaverMapPage> {
+  Position? _currentPosition;
+  Completer<NaverMapController> mapControllerCompleter = Completer();
+  
   @override
   void initState() {
     super.initState();
+    _getLocation();
   }
   Widget build(BuildContext context) {
-    final Completer<NaverMapController> mapControllerCompleter = Completer();
-
+    Position? currentPosition =
+        Provider.of<LocationProvider>(context).currentPosition;
     return Scaffold(
-      appBar: Header(),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        title: SearchBar(),
+        elevation: 0,
+      ),
       body: NaverMap(
-        options: const NaverMapViewOptions(
+        options: NaverMapViewOptions(
+            initialCameraPosition: NCameraPosition(
+              target: NLatLng(currentPosition!.latitude, currentPosition.longitude),
+              zoom: 14
+              ),
             indoorEnable: true,             // 실내 맵 사용 가능 여부 설정
             locationButtonEnable: true,    // 위치 버튼 표시 여부 설정
             consumeSymbolTapEvents: false,  // 심볼 탭 이벤트 소비 여부 설정
@@ -234,199 +235,56 @@ class _NaverMapPageState extends State<NaverMapPage> {
           onMapReady: (controller) async {                // 지도 준비 완료 시 호출되는 콜백 함수
             mapControllerCompleter.complete(controller);  // Completer에 지도 컨트롤러 완료 신호 전송
             debugPrint('네이버 맵 로딩 완료');
+            
+          },
+          onMapTapped: (NPoint point, NLatLng latLng)async {
+            debugPrint('Tapped Point: $point');
+            debugPrint('Tapped Point: $latLng');   
+            final lati = currentPosition.latitude;  
+            final longi = currentPosition.longitude;
+            debugPrint('lati Point: $currentPosition');     
+            debugPrint('longi Point: $latLng');     
           },
       ),
-      floatingActionButton: ElevatedButton(
-        onPressed: () {},
-        style: ElevatedButton.styleFrom(
-          primary: Color(0xFF141D5B),
-          onPrimary: Colors.white,
-          fixedSize: Size(148, 48),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(50),
-          ),
-        ),
-        child: Text('+    장소추가하기'),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      bottomNavigationBar: Footer(),
     );
+  }
+  void _getLocation() async {
+    var status = await Permission.location.status;
+    debugPrint('status: $status');
+
+    if (status == PermissionStatus.denied) {
+      await Permission.locationWhenInUse.request();
+      status = await Permission.location.status;
+    }
+
+    if (status.isGranted) {
+      try {
+        Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+        );
+        debugPrint('위치 정보 가져왔어염: $position');
+        // 위치 정보를 LocationProvider에 저장
+        Provider.of<LocationProvider>(context, listen: false)
+            .setCurrentPosition(position);
+      } catch (e) {
+        debugPrint('error: $e');
+      }
+    } else {
+      debugPrint('위치 권한이 거부되었습니다.');
+    }
   }
 }
 
-class ProfilePage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-          child: Padding(
-              padding: const EdgeInsets.all(40.0),
-              child: Column(
-                children: [
-                  const Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 23,
-                        backgroundImage: AssetImage('assets/images/splash.png'),
-                      ),
-                      SizedBox(width: 10),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '김선우',
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            'sunwoopia@naver.com',
-                            style: TextStyle(fontSize: 14),
-                          )
-                        ],
-                      )
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          // 내 장소로 이동 아직 미구현(클래스명 X)
-                          Navigator.pushNamed(context, '/my-places');
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: const Text(
-                            '내 장소 관리',
-                            style: TextStyle(
-                                fontFamily: 'Roboto',
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 40,
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          // 앱 설정 페이지로 이동(아직 덜 구현)
-                          // Navigator.of(context).pushReplacement(
-                          //   MaterialPageRoute(
-                          //       builder: (context) => appSettings()),
-                          // );
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: const Text(
-                            '앱 설정',
-                            style: TextStyle(
-                                fontFamily: 'Roboto',
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 40,
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          // 개인정보처리방침으로 이동
-                          Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(
-                                builder: (context) => personalInforamtion()),
-                          );
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: const Text(
-                            '개인정보 처리방침',
-                            style: TextStyle(
-                                fontFamily: 'Roboto',
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 40),
-                      GestureDetector(
-                        onTap: () {
-                          // Navigate to '이용약관' page
-                          Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(
-                                builder: (context) => termOfUse()),
-                          );
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: const Text(
-                            '이용약관',
-                            style: TextStyle(
-                                fontFamily: 'Roboto',
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black),
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
-                ],
-              ))),
-    );
-  }
-}
-    
+class LocationProvider with ChangeNotifier {
+  // 위치 정보를 저장할 변수
+  Position? _currentPosition;
 
-class personalInforamtion extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Text("개인정보처리방침"),
-    );
-  }
-}
+  // 위치 정보 가져오기
+  Position? get currentPosition => _currentPosition;
 
-class termOfUse extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Text("이용약관"),
-    );
-  }
-}
-
-class SplashScreen extends StatefulWidget {
-  @override
-  _SplashScreenState createState() => _SplashScreenState();
-}
-
-class _SplashScreenState extends State<SplashScreen> {
-  @override
-  void initState() {
-    super.initState();
-    Timer(Duration(seconds: 1), () {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => SignIn()),
-      );
-    });
-  }
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Center(
-        child: Image.asset(
-          'assets/images/splash.png',
-          width: 200,
-          height: 200,
-        ),
-      ),
-    );
+  // 위치 정보 설정
+  void setCurrentPosition(Position position) {
+    _currentPosition = position;
+    notifyListeners();
   }
 }

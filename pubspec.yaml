@@ -37,6 +37,11 @@ dependencies:
   flutter_svg: ^2.0.9
   http: ^1.1.0
   flutter_naver_map: ^1.0.2
+  shared_preferences: ^2.2.2
+  email_validator: ^2.1.17
+  geolocator: ^10.1.0
+  permission_handler: ^11.0.1
+  provider: ^6.1.1
 
 dev_dependencies:
   flutter_test:
@@ -68,6 +73,7 @@ flutter:
     - assets/images/active_home.svg
     - assets/images/active_location.svg
     - assets/images/active_setting.svg
+    - assets/images/back.svg
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
