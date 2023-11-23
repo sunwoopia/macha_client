@@ -11,6 +11,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await NaverMapSdk.instance.initialize(
@@ -107,7 +109,7 @@ class _MainPageState extends State<MainPage> {
           });
         },
         children: [
-          MyHomePage(),
+          MyHomePage(onAddCallback: addClick),
           NaverMapPage(),
           ProfilePage(),
         ],
@@ -124,19 +126,33 @@ class _MainPageState extends State<MainPage> {
       ),
     );
   }
+  void addClick() {
+    setState(() {
+      _currentIndex = 1;
+      _pageController.animateToPage(
+            1,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
+    });
+  }
 }
 
 class MyHomePage extends StatefulWidget {
+  final Function() onAddCallback;
+  MyHomePage({required this.onAddCallback});
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
   List<dynamic> places = []; 
+  late DateTime defaultDateTime;
 
   @override
   void initState() {
     super.initState();
+    defaultDateTime = DateTime.now();
     fetchData();
   }
   Future<void> fetchData() async {
@@ -144,12 +160,11 @@ class _MyHomePageState extends State<MyHomePage> {
     String? token = prefs.getString('token');
     debugPrint('$token');
     if (token != null) {
-      final url = 'http://localhost:5000/api/data/places/$token';
+      final url = 'http://15.164.170.6:5000/api/data/places/$token';
       try {
         final response = await http.get(Uri.parse(url));
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
-          debugPrint('!! $data');
           if (data['place'] is List) {
             setState(() {
               places = (data['place'] as List).cast<Map<String, dynamic>>();
@@ -178,7 +193,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   children: [
                     Container(
                       child: const Text(
-                        '장소를 추가해주세요',
+                        '도착지를 추가해주세요',
                         style: TextStyle(fontSize: 16, color: Colors.black),
                         textAlign: TextAlign.center,
                       ),
@@ -194,20 +209,20 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ),
       ),
-      // floatingActionButton: ElevatedButton(
-      //   onPressed: () {
-      //     // 추가 버튼을 눌렀을 때의 처리
-      //   },
-      //   style: ElevatedButton.styleFrom(
-      //     backgroundColor: Color(0xFF141D5B),
-      //     fixedSize: const Size(148, 48),
-      //     shape: RoundedRectangleBorder(
-      //       borderRadius: BorderRadius.circular(50),
-      //     ),
-      //   ),
-      //   child: Text('+    장소추가하기'),
-      // ),
-      // floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton: ElevatedButton(
+        onPressed: () {
+          widget.onAddCallback();
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Color(0xFF141D5B),
+          fixedSize: const Size(148, 48),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(50),
+          ),
+        ),
+        child: Text('+    장소추가하기'),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }
@@ -262,7 +277,7 @@ class _SearchBarState extends State<SearchBar> {
 
   void onSearch(String inputValue) async {
     // 기존의 onSearch 메서드
-    final String apiUrl = 'http://localhost:5000/api/data/naver/address';
+    final String apiUrl = 'http://15.164.170.6:5000/api/data/naver/address';
     try {
       final Map<String, String> data = {
         "address": "$inputValue",
@@ -305,7 +320,6 @@ class NaverMapPage extends StatefulWidget {
   _NaverMapPageState createState() => _NaverMapPageState();
 }
 class _NaverMapPageState extends State<NaverMapPage> {
-  Position? _currentPosition;
   Completer<NaverMapController> mapControllerCompleter = Completer();
   late NaverMapController mapController;
   String _token = '';
@@ -315,7 +329,7 @@ class _NaverMapPageState extends State<NaverMapPage> {
     _getLocation();
   }
   Future<Map<String, dynamic>> fetchLocationInfo(double latitude, double longitude) async {
-    final apiUrl = 'http://localhost:5000/api/data/naver/coordinate';
+    final apiUrl = 'http://15.164.170.6:5000/api/data/naver/coordinate';
     final String queryParams = 'x=${longitude.toString()}&y=${latitude.toString()}';
 
     final response = await http.get(
@@ -350,8 +364,9 @@ class _NaverMapPageState extends State<NaverMapPage> {
               zoom: 14
               ),
             indoorEnable: true,             // 실내 맵 사용 가능 여부 설정
+            scaleBarEnable: true,
             locationButtonEnable: true,    // 위치 버튼 표시 여부 설정
-            consumeSymbolTapEvents: false,  // 심볼 탭 이벤트 소비 여부 설정
+            consumeSymbolTapEvents: true,  // 심볼 탭 이벤트 소비 여부 설정
           ),
           onMapReady: (controller) async {
              mapController = controller;
@@ -407,7 +422,7 @@ class _NaverMapPageState extends State<NaverMapPage> {
                                 'y': latLng.latitude,
                                 'userId': _token,
                               };
-                              const placeUrl = 'http://localhost:5000/api/data/places';
+                              const placeUrl = 'http://15.164.170.6:5000/api/data/places';
                               final response = await http.post(
                                 Uri.parse(placeUrl),
                                 headers: {'Content-Type': 'application/json'},
@@ -494,7 +509,7 @@ class _NaverMapPageState extends State<NaverMapPage> {
                       'y': y,
                       'userId': _token,
                     };
-                    const placeUrl = 'http://localhost:5000/api/data/places';
+                    const placeUrl = 'http://15.164.170.6:5000/api/data/places';
                     final response = await http.post(
                       Uri.parse(placeUrl),
                       headers: {'Content-Type': 'application/json'},
@@ -615,80 +630,148 @@ class ContainerList extends StatefulWidget {
 
 class _ContainerListState extends State<ContainerList> {
   int selectedContainerIndex = -1;
+  late DateTime selectedDateTime;
+  late DateTime defaultDateTime;
+
+  @override
+  void initState() {
+    super.initState();
+    defaultDateTime = DateTime.now();
+    selectedDateTime = defaultDateTime;
+  }
 
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
       padding: EdgeInsets.all(40.0),
-      itemCount: widget.dataList.length,
+      itemCount: widget.dataList.length + 1, // +1 for the date and time section
       itemBuilder: (context, index) {
-        return GestureDetector(
-          onTap: () {
+        if (index == 0) {
+          // Display date and time section
+          return buildDateTimeSection(context);
+        } else {
+          // Display container list
+          return buildContainerItem(index - 1);
+        }
+      },
+    );
+  }
+
+  Widget buildDateTimeSection(BuildContext context) {
+    return GestureDetector(
+      onTap: () async {
+        DateTime? pickedDate = await showDatePicker(
+          context: context,
+          initialDate: selectedDateTime,
+          firstDate: DateTime(2000),
+          lastDate: DateTime(2101),
+        );
+
+        if (pickedDate != null) {
+          TimeOfDay? pickedTime = await showTimePicker(
+            context: context,
+            initialTime: TimeOfDay.fromDateTime(selectedDateTime),
+          );
+
+          if (pickedTime != null) {
             setState(() {
-              selectedContainerIndex = index;
+              selectedDateTime = DateTime(
+                pickedDate.year,
+                pickedDate.month,
+                pickedDate.day,
+                pickedTime.hour,
+                pickedTime.minute,
+              );
             });
-          },
-          child: Container(
-            height: 150, // 조금 크게 조정
-            padding: EdgeInsets.all(15.0),
-            margin: EdgeInsets.symmetric(vertical: 10.0),
-            decoration: BoxDecoration(
-              color: selectedContainerIndex == index
-                  ? Color(0xBB86FC).withOpacity(0.12)
-                  : Colors.white,
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(
-                color: selectedContainerIndex == index
-                    ? Color(0xFF6200EE)
-                    : Color(0xFFD8D8D8),
-              ),
+          }
+        }
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 10.0),
+        alignment: Alignment.center,
+        color: Colors.grey[200],
+        child: Column(
+          children: [
+            Text(
+              '선택된 날짜와 시간:',
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.dataList[index]['name']!,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+            Text(
+              DateFormat('yyyy-MM-dd hh:mm a').format(selectedDateTime),
+              style: TextStyle(fontSize: 16),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildContainerItem(int index) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          selectedContainerIndex = index;
+        });
+      },
+      child: Container(
+        height: 150,
+        padding: EdgeInsets.all(15.0),
+        margin: EdgeInsets.symmetric(vertical: 10.0),
+        decoration: BoxDecoration(
+          color: selectedContainerIndex == index
+              ? Color(0xBB86FC).withOpacity(0.12)
+              : Colors.white,
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(
+            color: selectedContainerIndex == index
+                ? Color(0xFF6200EE)
+                : Color(0xFFD8D8D8),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              widget.dataList[index]['name']!,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+            SizedBox(height: 20,),
+            Text(
+              widget.dataList[index]['address']!,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.normal,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+            if (selectedContainerIndex == index)
+              Align(
+                alignment: Alignment.bottomRight,
+                child: Container(
+                  width: 96,
+                  height: 36,
+                  margin: EdgeInsets.only(top: 10),
+                  decoration: BoxDecoration(
+                    color: Color(0xFF601CB7),
+                    borderRadius: BorderRadius.circular(40),
                   ),
-                  overflow: TextOverflow.ellipsis
-                ),
-                SizedBox(height: 20,),
-                Text(
-                  widget.dataList[index]['address']!,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.normal,
-                  ),
-                  overflow: TextOverflow.ellipsis
-                ),
-                if (selectedContainerIndex == index)
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: Container(
-                      width: 96,
-                      height: 36,
-                      margin: EdgeInsets.only(top: 10), // 조금 여백 추가
-                      decoration: BoxDecoration(
-                        color: Color(0xFF601CB7),
-                        borderRadius: BorderRadius.circular(40),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '막차보기',
-                          style: TextStyle(
-                            color: Colors.white,
-                          ),
-                        ),
+                  child: Center(
+                    child: Text(
+                      '막차보기',
+                      style: TextStyle(
+                        color: Colors.white,
                       ),
                     ),
                   ),
-              ],
-            ),
-          ),
-        );
-      },
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

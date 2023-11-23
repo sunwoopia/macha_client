@@ -59,29 +59,29 @@ class ProfilePage extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(
-                  height: 40,
-                ),
-                GestureDetector(
-                  onTap: () {
-                    // 앱 설정 페이지로 이동(아직 덜 구현)
-                    // Navigator.of(context).pushReplacement(
-                    //   MaterialPageRoute(
-                    //       builder: (context) => appSettings()),
-                    // );
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: const Text(
-                      '앱 설정',
-                      style: TextStyle(
-                          fontFamily: 'Roboto',
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black),
-                    ),
-                  ),
-                ),
+                // const SizedBox(
+                //   height: 40,
+                // ),
+                // GestureDetector(
+                //   onTap: () {
+                //     // 앱 설정 페이지로 이동(아직 덜 구현)
+                //     // Navigator.of(context).pushReplacement(
+                //     //   MaterialPageRoute(
+                //     //       builder: (context) => appSettings()),
+                //     // );
+                //   },
+                //   child: Padding(
+                //     padding: const EdgeInsets.all(8.0),
+                //     child: const Text(
+                //       '앱 설정',
+                //       style: TextStyle(
+                //           fontFamily: 'Roboto',
+                //           fontSize: 16,
+                //           fontWeight: FontWeight.w600,
+                //           color: Colors.black),
+                //     ),
+                //   ),
+                // ),
                 const SizedBox(
                   height: 40,
                 ),

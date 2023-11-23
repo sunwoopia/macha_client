@@ -104,7 +104,7 @@ class _SignUp2State extends State<SignUp2> {
                     },
                   ),
                   const Text(
-                    '동의하시겠습니까?',
+                    '개인정보 이용에 동의하시겠습니까?',
                     style: TextStyle(color: Color(0xFF7A7A7A)),
                   ),
                 ],
@@ -199,7 +199,7 @@ class _SignUp2State extends State<SignUp2> {
   }
 
   Future<void> registerUser() async {
-    const url = 'http://localhost:5000/api/user/';
+    const url = 'http://15.164.170.6:5000/api/user/';
     final Map<String, String> data = {
       'name': nameController.text,
       'email': emailController.text,
