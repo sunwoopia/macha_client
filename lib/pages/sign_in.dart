@@ -61,7 +61,7 @@ class SignIn extends StatelessWidget {
   }
 
   Future<void> loginUser(BuildContext context) async {
-    const  url = 'http://localhost:5000/api/user/login';
+    const url = 'http://localhost:5000/api/user/login';
     final Map<String, String> data = {
       'email': emailController.text,
       'password': passwordController.text,

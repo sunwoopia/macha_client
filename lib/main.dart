@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
@@ -9,6 +10,7 @@ import 'pages/sign_up.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:http/http.dart' as http;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await NaverMapSdk.instance.initialize(
@@ -130,49 +132,95 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  List<dynamic> places = []; 
+
   @override
+  void initState() {
+    super.initState();
+    fetchData();
+  }
+  Future<void> fetchData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
+    debugPrint('$token');
+    if (token != null) {
+      final url = 'http://localhost:5000/api/data/places/$token';
+      try {
+        final response = await http.get(Uri.parse(url));
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          debugPrint('!! $data');
+          if (data['place'] is List) {
+            setState(() {
+              places = (data['place'] as List).cast<Map<String, dynamic>>();
+            });
+          } else {
+            debugPrint('Invalid data type for places');
+          } 
+        } else {
+          debugPrint('Failed to load data: ${response.statusCode}');
+        }
+      } catch (e) {
+        debugPrint('Error: $e');
+      }
+    }
+  }
+
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(40.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                child: const Text(
-                  '장소를 추가해주세요',
-                  style: TextStyle(fontSize: 16, color: Colors.black),
-                  textAlign: TextAlign.center,
+        child: places.isNotEmpty
+            ? ContainerList(dataList: places)
+            : Padding(
+                padding: const EdgeInsets.all(40.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      child: const Text(
+                        '장소를 추가해주세요',
+                        style: TextStyle(fontSize: 16, color: Colors.black),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    Container(
+                      child: Image.asset(
+                        'assets/images/location.png',
+                        width: 200,
+                        height: 200,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              Container(
-                child: Image.asset(
-                  'assets/images/location.png',
-                  width: 200,
-                  height: 200,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
-      floatingActionButton: ElevatedButton(
-        onPressed: () {},
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Color(0xFF141D5B),
-          fixedSize: const Size(148, 48),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(50),
-          ),
-        ),
-        child: Text('+    장소추가하기'),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      // floatingActionButton: ElevatedButton(
+      //   onPressed: () {
+      //     // 추가 버튼을 눌렀을 때의 처리
+      //   },
+      //   style: ElevatedButton.styleFrom(
+      //     backgroundColor: Color(0xFF141D5B),
+      //     fixedSize: const Size(148, 48),
+      //     shape: RoundedRectangleBorder(
+      //       borderRadius: BorderRadius.circular(50),
+      //     ),
+      //   ),
+      //   child: Text('+    장소추가하기'),
+      // ),
+      // floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }
-class SearchBar extends StatelessWidget {
+class SearchBar extends StatefulWidget {
+  final Function(String, String, String) onSearchCallback;
+  SearchBar({required this.onSearchCallback});
+  @override
+  _SearchBarState createState() => _SearchBarState();
+}
+
+class _SearchBarState extends State<SearchBar> {
+  final TextEditingController _textEditingController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -184,21 +232,73 @@ class SearchBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.search, color: Colors.black,),
-          SizedBox(width: 4),
+          SizedBox(width: 20),
           Expanded(
             child: TextField(
+              controller: _textEditingController,
+              onChanged: (value) {
+                // Call your onSearch method here with the updated value
+                setState(() {
+                  _textEditingController.text = value;
+                });
+              },
               decoration: InputDecoration(
                 hintText: '장소를 검색하세요',
                 border: InputBorder.none,
               ),
             ),
           ),
+          IconButton(
+            icon: Icon(Icons.search, color: Colors.black,),
+            onPressed: () {
+              // Call onSearch with the current value when the search icon is pressed
+              onSearch(_textEditingController.text);
+            },
+          ),
         ],
       ),
     );
   }
+
+  void onSearch(String inputValue) async {
+    // 기존의 onSearch 메서드
+    final String apiUrl = 'http://localhost:5000/api/data/naver/address';
+    try {
+      final Map<String, String> data = {
+        "address": "$inputValue",
+      };
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(data),
+      );
+      if (response.statusCode == 201) {
+        debugPrint('API 응답: ${response.body}');
+
+        // 응답 본문에서 x와 y 값을 파싱합니다.
+        final responseData = json.decode(response.body);
+        String x = responseData['x'];
+        String y = responseData['y'];
+        widget.onSearchCallback(x, y, inputValue);
+      } else {
+        debugPrint('API 호출 실패: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('오류 발생: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    // Dispose of the controller when the widget is disposed
+    _textEditingController.dispose();
+    super.dispose();
+  }
 }
+
+
 
 class NaverMapPage extends StatefulWidget {
   @override
@@ -207,11 +307,28 @@ class NaverMapPage extends StatefulWidget {
 class _NaverMapPageState extends State<NaverMapPage> {
   Position? _currentPosition;
   Completer<NaverMapController> mapControllerCompleter = Completer();
-  
+  late NaverMapController mapController;
+  String _token = '';
   @override
   void initState() {
     super.initState();
     _getLocation();
+  }
+  Future<Map<String, dynamic>> fetchLocationInfo(double latitude, double longitude) async {
+    final apiUrl = 'http://localhost:5000/api/data/naver/coordinate';
+    final String queryParams = 'x=${longitude.toString()}&y=${latitude.toString()}';
+
+    final response = await http.get(
+      Uri.parse('$apiUrl?$queryParams'),
+      headers: {'Content-Type': 'application/json'},
+    );
+    debugPrint('$response');
+    if (response.statusCode == 201) {
+      final responsedata = json.decode(response.body);
+      return responsedata;
+    } else {
+      throw Exception('Failed to load location info');
+    }
   }
   Widget build(BuildContext context) {
     Position? currentPosition =
@@ -219,7 +336,11 @@ class _NaverMapPageState extends State<NaverMapPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: SearchBar(),
+        title: SearchBar(
+          onSearchCallback: (x, y, address) {
+            moveToLocation(x, y, address); // 예시로 넣은데 실제 동작에 맞게 수정 필요
+          },
+        ),
         elevation: 0,
       ),
       body: NaverMap(
@@ -232,23 +353,193 @@ class _NaverMapPageState extends State<NaverMapPage> {
             locationButtonEnable: true,    // 위치 버튼 표시 여부 설정
             consumeSymbolTapEvents: false,  // 심볼 탭 이벤트 소비 여부 설정
           ),
-          onMapReady: (controller) async {                // 지도 준비 완료 시 호출되는 콜백 함수
-            mapControllerCompleter.complete(controller);  // Completer에 지도 컨트롤러 완료 신호 전송
-            debugPrint('네이버 맵 로딩 완료');
-            
+          onMapReady: (controller) async {
+             mapController = controller;
+             mapControllerCompleter.complete(controller);
+             debugPrint('네이버 맵 로딩 완료');
           },
-          onMapTapped: (NPoint point, NLatLng latLng)async {
-            debugPrint('Tapped Point: $point');
-            debugPrint('Tapped Point: $latLng');   
-            final lati = currentPosition.latitude;  
-            final longi = currentPosition.longitude;
-            debugPrint('lati Point: $currentPosition');     
-            debugPrint('longi Point: $latLng');     
+          onMapTapped: (NPoint point, NLatLng latLng) async {
+            final cameraUpdate = NCameraUpdate.withParams(
+              target: NLatLng(latLng.latitude, latLng.longitude),
+              zoom: 14,
+            );
+            mapController.updateCamera(cameraUpdate);
+            final returnValue = await fetchLocationInfo(latLng.latitude, latLng.longitude);
+            final addressValue = returnValue['address'];
+
+            String infoWindowText;
+            if (addressValue != null) {
+              infoWindowText = addressValue;
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
+                ),
+                builder: (context) {
+                  String placeName = '';
+                  return SingleChildScrollView(
+                    padding: EdgeInsets.only(
+                      bottom: MediaQuery.of(context).viewInsets.bottom,
+                    ),
+                    child: Container(
+                      padding: EdgeInsets.all(16.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          TextField(
+                            decoration: InputDecoration(labelText: '장소 이름'),
+                            onChanged: (value) {
+                              placeName = value;
+                            },
+                          ),
+                          SizedBox(height: 16),
+                          ElevatedButton(
+                            style: ButtonStyle(
+                                backgroundColor: MaterialStateProperty.all<Color>(Color(0xFF141D5B)), // 원하는 색상으로 변경
+                              ),
+                              onPressed: () async {
+                              // 서버에 요청 보내기
+                              final requestBody = {
+                                'name': placeName,
+                                'address': infoWindowText,
+                                'x': latLng.longitude,
+                                'y': latLng.latitude,
+                                'userId': _token,
+                              };
+                              const placeUrl = 'http://localhost:5000/api/data/places';
+                              final response = await http.post(
+                                Uri.parse(placeUrl),
+                                headers: {'Content-Type': 'application/json'},
+                                body: jsonEncode(requestBody),
+                              );
+                              final responseData = json.decode(response.body);
+                              if (responseData['success'] == true) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('장소가 추가되었습니다.'),
+                                    duration: Duration(seconds: 2),
+                                    behavior: SnackBarBehavior.floating, // 또는 SnackBarBehavior.fixed
+                                    backgroundColor: Color(0xFF141D5B),
+                                    margin: EdgeInsets.all(8.0), // SnackBar의 외부 여백 설정
+                                    shape: RoundedRectangleBorder( // SnackBar 모양 설정
+                                      borderRadius: BorderRadius.circular(10.0),
+                                    ),
+                                  ),
+                                );
+                              }
+                              Navigator.pop(context);
+                            },
+                            child: Text('추가하기'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              );
+            } else {
+              infoWindowText = '잘못된 장소입니다. 다시 클릭하여 주세요';
+            }
+            final infoWindow = NInfoWindow.onMap(
+              id: "location",
+              position: NLatLng(latLng.latitude, latLng.longitude),
+              text: infoWindowText,
+            );
+            mapController.addOverlay(infoWindow);
           },
       ),
     );
   }
+  void moveToLocation(String x, String y, String address) {
+    final cameraUpdate = NCameraUpdate.withParams(
+      target: NLatLng(double.parse(y), double.parse(x)),
+      zoom: 14,
+    );
+    mapController.updateCamera(cameraUpdate);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
+      ),
+      builder: (context) {
+        String placeName = '';
+        return SingleChildScrollView(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Container(
+            padding: EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                TextField(
+                  decoration: InputDecoration(labelText: '장소 이름'),
+                  onChanged: (value) {
+                    placeName = value;
+                  },
+                ),
+                SizedBox(height: 16),
+                ElevatedButton(
+                  style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.all<Color>(Color(0xFF141D5B)), // 원하는 색상으로 변경
+                    ),
+                    onPressed: () async {
+                    // 서버에 요청 보내기
+                    final requestBody = {
+                      'name': placeName,
+                      'address': address,
+                      'x': x,
+                      'y': y,
+                      'userId': _token,
+                    };
+                    const placeUrl = 'http://localhost:5000/api/data/places';
+                    final response = await http.post(
+                      Uri.parse(placeUrl),
+                      headers: {'Content-Type': 'application/json'},
+                      body: jsonEncode(requestBody),
+                    );
+                    final responseData = json.decode(response.body);
+                    if (responseData['success'] == true) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('장소가 추가되었습니다.'),
+                          duration: Duration(seconds: 2),
+                          behavior: SnackBarBehavior.floating, // 또는 SnackBarBehavior.fixed
+                          backgroundColor: Color(0xFF141D5B),
+                          margin: EdgeInsets.all(8.0), // SnackBar의 외부 여백 설정
+                          shape: RoundedRectangleBorder( // SnackBar 모양 설정
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
+                        ),
+                      );
+                    }
+                    Navigator.pop(context);
+                  },
+                  child: Text('추가하기'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    String infoWindowText;
+    infoWindowText = address;
+    final infoWindow = NInfoWindow.onMap(
+      id: "location",
+      position: NLatLng(double.parse(y), double.parse(x)),
+      text: infoWindowText,
+    );
+    mapController.addOverlay(infoWindow);
+  }
   void _getLocation() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
+    if (token != null) {
+      _token = token;
+    }
     var status = await Permission.location.status;
     debugPrint('status: $status');
 
@@ -286,5 +577,118 @@ class LocationProvider with ChangeNotifier {
   void setCurrentPosition(Position position) {
     _currentPosition = position;
     notifyListeners();
+  }
+}
+class LocationInfo extends StatelessWidget {
+  final String locationText;
+  final VoidCallback onAddLocationPressed;
+
+  LocationInfo({required this.locationText, required this.onAddLocationPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      padding: EdgeInsets.all(6.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            locationText,
+            style: TextStyle(fontSize: 6.0, color: Colors.black), // 조절 가능한 폰트 크기
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ContainerList extends StatefulWidget {
+  final List<dynamic> dataList;
+
+  ContainerList({required this.dataList});
+
+  @override
+  _ContainerListState createState() => _ContainerListState();
+}
+
+class _ContainerListState extends State<ContainerList> {
+  int selectedContainerIndex = -1;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      padding: EdgeInsets.all(40.0),
+      itemCount: widget.dataList.length,
+      itemBuilder: (context, index) {
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              selectedContainerIndex = index;
+            });
+          },
+          child: Container(
+            height: 150, // 조금 크게 조정
+            padding: EdgeInsets.all(15.0),
+            margin: EdgeInsets.symmetric(vertical: 10.0),
+            decoration: BoxDecoration(
+              color: selectedContainerIndex == index
+                  ? Color(0xBB86FC).withOpacity(0.12)
+                  : Colors.white,
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(
+                color: selectedContainerIndex == index
+                    ? Color(0xFF6200EE)
+                    : Color(0xFFD8D8D8),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.dataList[index]['name']!,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  overflow: TextOverflow.ellipsis
+                ),
+                SizedBox(height: 20,),
+                Text(
+                  widget.dataList[index]['address']!,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.normal,
+                  ),
+                  overflow: TextOverflow.ellipsis
+                ),
+                if (selectedContainerIndex == index)
+                  Align(
+                    alignment: Alignment.bottomRight,
+                    child: Container(
+                      width: 96,
+                      height: 36,
+                      margin: EdgeInsets.only(top: 10), // 조금 여백 추가
+                      decoration: BoxDecoration(
+                        color: Color(0xFF601CB7),
+                        borderRadius: BorderRadius.circular(40),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '막차보기',
+                          style: TextStyle(
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 }
