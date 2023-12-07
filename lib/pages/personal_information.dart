@@ -4,16 +4,20 @@ import 'package:macha_client/common/components/back_header.dart';
 class PersonalInformation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       appBar: BackHeader(),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+      body: ListView(
         children: [
           SizedBox(height: 40,),
-          Text("개인정보처리방침", style: TextStyle(fontSize: 30, fontWeight: FontWeight.w600),),
+          Center(
+            child: Text("개인정보처리방침", style: TextStyle(fontSize: 30, fontWeight: FontWeight.w600),),
+          ),
           SizedBox(height: 40,),
-          Text("""
-          수집하는 개인정보 항목 및 수집 방법
+          Container(
+            width: double.infinity, // 가로로 확장
+            padding: EdgeInsets.symmetric(horizontal: 20), // 가로 내부 간격 조절
+            child: Text("""
+            수집하는 개인정보 항목 및 수집 방법
 
             1.1. 수집하는 개인정보 항목
 
@@ -49,7 +53,8 @@ class PersonalInformation extends StatelessWidget {
 
             7.1. 이용자는 언제든지 자신의 개인정보를 열람,
             수정 또는 삭제 요청할 수 있습니다.
-        """),
+        """, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),),
+          )
         ],
       ), 
     );

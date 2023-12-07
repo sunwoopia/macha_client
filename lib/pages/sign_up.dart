@@ -14,6 +14,7 @@ class _SignUp extends State<SignUp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(40.0),
@@ -75,10 +76,12 @@ class _SignUp2State extends State<SignUp2> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   TextEditingController confirmPasswordController = TextEditingController();
+  String errorMessage = '';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(40.0),
@@ -92,7 +95,7 @@ class _SignUp2State extends State<SignUp2> {
               buildInputField('이메일', controller: emailController),
               buildInputField('비밀번호', isPassword: true, controller: passwordController),
               buildInputField('비밀번호 확인', isPassword: true, controller: confirmPasswordController),
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
               Row(
                 children: [
                   Checkbox(
@@ -109,7 +112,15 @@ class _SignUp2State extends State<SignUp2> {
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
+              Container(
+                width: double.infinity,
+                child: Text(
+                  errorMessage,
+                  style: TextStyle(color: Colors.red),
+                  textAlign: TextAlign.left,
+                )
+              ),
+              const SizedBox(height: 10),
               ElevatedButton(
                 onPressed: () async {
                   if (validateFields()) {
@@ -171,27 +182,30 @@ class _SignUp2State extends State<SignUp2> {
         emailController.text.isEmpty ||
         passwordController.text.isEmpty ||
         confirmPasswordController.text.isEmpty) {
-      // 필수 필드가 비어있는 경우
-      // 사용자에게 알림을 표시하거나, 이에 대한 처리를 추가할 수 있습니다.
-      debugPrint('모든 필드를 입력해주세요.');
+      setState(() {
+        errorMessage = '모든 필드를 입력해주세요';
+      });
       return false;
     }
 
     if (!EmailValidator.validate(emailController.text)) {
-      // 이메일 형식이 아닌 경우
-      debugPrint('올바른 이메일 주소를 입력해주세요.');
+      setState(() {
+        errorMessage = '올바른 이메일 주소를 입력해주세요';
+      });
       return false;
     }
 
     if (passwordController.text != confirmPasswordController.text) {
-      // 비밀번호와 비밀번호 확인이 일치하지 않는 경우
-      debugPrint('비밀번호와 비밀번호 확인이 일치하지 않습니다.');
+      setState(() {
+        errorMessage = '비밀번호와 비밀번호 확인이 일치하지 않습니다';
+      });
       return false;
     }
 
     if (!isChecked) {
-      // 동의 체크가 되지 않은 경우
-      debugPrint('약관에 동의해주세요.');
+      setState(() {
+        errorMessage = '약관에 동의해주세요';
+      });
       return false;
     }
 
@@ -211,7 +225,6 @@ class _SignUp2State extends State<SignUp2> {
       body: json.encode(data),
       headers: {'Content-Type': 'application/json'},
     );
-    
     if (response.statusCode == 201) {
       final responseData = json.decode(response.body);
       if (responseData['success'] == true) {

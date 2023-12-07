@@ -5,13 +5,20 @@ import 'sign_up.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-class SignIn extends StatelessWidget {
+class SignIn extends StatefulWidget {
+  @override
+  _SignInState createState() => _SignInState();
+}
+
+class _SignInState extends State<SignIn> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  String errorMessage = '';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(40.0),
@@ -22,7 +29,16 @@ class SignIn extends StatelessWidget {
                   width: 200, height: 200, color: Colors.black),
               buildInputField('이메일', controller: emailController),
               buildInputField('비밀번호', isPassword: true, controller: passwordController),
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
+              Container(
+                width: double.infinity,
+                child: Text(
+                  errorMessage,
+                  style: TextStyle(color: Colors.red),
+                  textAlign: TextAlign.left,
+                )
+              ),
+              const SizedBox(height: 10),
               ElevatedButton(
                 onPressed: () async {
                   await loginUser(context);
@@ -55,6 +71,7 @@ class SignIn extends StatelessWidget {
       ),
     );
   }
+
   Future<void> saveTokenToSharedPreferences(String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('token', token);
@@ -66,26 +83,42 @@ class SignIn extends StatelessWidget {
       'email': emailController.text,
       'password': passwordController.text,
     };
-
+    debugPrint('${data}');
     final response = await http.post(
       Uri.parse(url),
       body: json.encode(data),
       headers: {'Content-Type': 'application/json'},
     );
-
+    debugPrint('${response.statusCode}');
     if (response.statusCode == 200) {
       final responseData = json.decode(response.body);
-      if (responseData['success'] == true) {
+      if (responseData['success'] == true && responseData['token'] != null) {
         saveTokenToSharedPreferences(responseData['token']);
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('로그인 성공!'),
+              duration: Duration(seconds: 2),
+              behavior: SnackBarBehavior.floating, // 또는 SnackBarBehavior.fixed
+              backgroundColor: Color(0xFF141D5B),
+              margin: EdgeInsets.all(8.0), // SnackBar의 외부 여백 설정
+              shape: RoundedRectangleBorder( // SnackBar 모양 설정
+                borderRadius: BorderRadius.circular(10.0),
+              ),
+            ),
+          );
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => MainPage()),
         );
       } else {
-        debugPrint('로그인 실패.');
+        setState(() {
+          errorMessage = '아이디와 비밀번호를 확인해주세요';
+        });
       }
     } else {
-      debugPrint('로그인 실패. Status code: ${response.statusCode}');
+      setState(() {
+        errorMessage = '아이디와 비밀번호를 확인해주세요';
+      });    
     }
   }
 
